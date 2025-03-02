@@ -28,6 +28,7 @@ namespace DungeonExplorer.Managers.Game {
             while (playing)
             {
                 DisplayGameStatus();
+                RoomManager.DisplayMap();
                 string action = GetPlayerAction();
                 playing = HandlePlayerAction(action);
                 Console.WriteLine("\n\n");
@@ -71,6 +72,10 @@ namespace DungeonExplorer.Managers.Game {
                     Console.WriteLine($"- Use {item.Name} (ID: {item.Id})");
                 }
             }
+            Console.WriteLine("- Move Up");
+            Console.WriteLine("- Move Down");
+            Console.WriteLine("- Move Left");
+            Console.WriteLine("- Move Right");
             Console.WriteLine("- Exit");
             Console.WriteLine();
         }
@@ -88,6 +93,17 @@ namespace DungeonExplorer.Managers.Game {
                 else
                 {
                     Console.WriteLine("Invalid action. Please try again.");
+                }
+            }
+            else if (action.Equals("move up", StringComparison.OrdinalIgnoreCase) ||
+                     action.Equals("move down", StringComparison.OrdinalIgnoreCase) ||
+                     action.Equals("move left", StringComparison.OrdinalIgnoreCase) ||
+                     action.Equals("move right", StringComparison.OrdinalIgnoreCase))
+            {
+                string direction = action.Split(' ')[1];
+                if (!RoomManager.MovePlayer(direction, Player))
+                {
+                    Console.WriteLine("You can't move in that direction.");
                 }
             }
             else if (action.Equals("exit", StringComparison.OrdinalIgnoreCase))

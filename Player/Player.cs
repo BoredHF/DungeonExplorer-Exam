@@ -25,7 +25,7 @@ namespace DungeonExplorer.Player {
 
         public void UseItem(Item.Item item)
         {
-            // Implement item usage logic here
+            // item usage logic here
             if (InventoryContents().Contains(item))
             {
                 Console.WriteLine($"{Name} uses {item.Name}");

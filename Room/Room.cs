@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using DungeonExplorer.Item.Items;
 
 namespace DungeonExplorer.Room
 {
@@ -14,7 +15,7 @@ namespace DungeonExplorer.Room
         public Room(string description, RoomType roomType) {
             // Implement additional text formatting for the type of room
             switch (roomType)
-            {
+        {
 
                 case RoomType.Safe:
                     description += " | SAFE ZONE |";
@@ -51,6 +52,23 @@ namespace DungeonExplorer.Room
 
         public RoomType getRoomType() {
             return roomType;
+        }
+
+        public void EnterRoom(Player.Player player)
+        {
+            switch (roomType)
+            {
+                case RoomType.Event:
+                    player.PickUpItem(new HealthPotion());
+                    Console.WriteLine("You found a treasure room! You receive a health potion.");
+                    break;
+                case RoomType.None:
+                    Console.WriteLine("You hit a wall.");
+                    break;
+                default:
+                    Console.WriteLine("You entered a " + roomType.ToString().ToLower() + " room.");
+                    break;
+            }
         }
     }
 }
