@@ -19,7 +19,22 @@ namespace DungeonExplorer.Managers.Game {
         /// </summary>
         public Game()
         {
-            Player = new Player.Player("Player", 100);
+            Console.Clear();
+
+            // Asks the player for their name, and then sets the player's name
+            string playerName = string.Empty;
+            while (string.IsNullOrWhiteSpace(playerName))
+            {
+                Console.WriteLine("What would you like to call this character?");
+                Console.Write("> ");
+                playerName = Console.ReadLine();
+                if (string.IsNullOrWhiteSpace(playerName))
+                {
+                    Console.WriteLine("Player name cannot be empty. Please enter a valid name.");
+                }
+            }
+
+            Player = new Player.Player(playerName, 100);
             CurrentRoom = new Room.Room($"Starting Room", Room.RoomType.Normal);
             RoomManager = new RoomManager(); // Initialize RoomManager
         }
