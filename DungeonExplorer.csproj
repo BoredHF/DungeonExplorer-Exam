@@ -46,6 +46,7 @@
     <Compile Include="Item\Item.cs" />
     <Compile Include="Item\Items\HealthPotion.cs" />
     <Compile Include="Managers\Game.cs" />
+    <Compile Include="Managers\RoomManager.cs" />
     <Compile Include="Player\Player.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

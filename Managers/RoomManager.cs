@@ -3,10 +3,14 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using DungeonExplorer.Item.Items;
 using DungeonExplorer.Player;
 using DungeonExplorer.Room;
 
 namespace DungeonExplorer.Managers {
+    /// <summary>
+    /// Manages the rooms in the game.
+    /// </summary>
     public class RoomManager {
         private Room.Room[,] rooms;
         private bool[,] visitedRooms;
@@ -14,24 +18,29 @@ namespace DungeonExplorer.Managers {
         private int currentCol;
         private string[,] levelLayout;
 
-        // Creating the first level of the dungeon
+        /// <summary>
+        /// Initializes a new instance of the RoomManager class.
+        /// </summary>
         public RoomManager()
         {
             InitializeRooms();
         }
 
+        /// <summary>
+        /// Initializes the rooms for the first level.
+        /// </summary>
         private void InitializeRooms()
         {
-            // Initialize rooms for the first level using a 2D array
             levelLayout = new string[,]
             {
-                    { "S", "B", "N" },
-                    { "N", "#", "N" },
-                    { "N", "T", "N" }
+                        { "T", "#", "B" },
+                        { "N", "#", "N" },
+                        { "N", "E", "N" }
             };
 
             int rows = levelLayout.GetLength(0);
             int cols = levelLayout.GetLength(1);
+
             rooms = new Room.Room[rows, cols];
             visitedRooms = new bool[rows, cols];
 
@@ -44,16 +53,24 @@ namespace DungeonExplorer.Managers {
                     if (roomType != RoomType.None)
                     {
                         rooms[row, col] = new Room.Room($"Room ({row},{col})", roomType);
+                        if (roomType == RoomType.Event)
+                        {
+                            rooms[row, col].AddItem(new HealthPotion());
+                        }
                     }
                 }
             }
 
-            // Start the player in the first room (0,0)
             currentRow = 0;
             currentCol = 0;
             visitedRooms[currentRow, currentCol] = true;
         }
 
+        /// <summary>
+        /// Gets the room type from a character.
+        /// </summary>
+        /// <param name="cell">The character representing the room type.</param>
+        /// <returns>The room type.</returns>
         private RoomType GetRoomTypeFromChar(string cell)
         {
             switch (cell)
@@ -64,8 +81,6 @@ namespace DungeonExplorer.Managers {
                     return RoomType.Normal;
                 case "T":
                     return RoomType.Safe;
-                case "S":
-                    return RoomType.Shop;
                 case "E":
                     return RoomType.Event;
                 case "#":
@@ -75,11 +90,21 @@ namespace DungeonExplorer.Managers {
             }
         }
 
+        /// <summary>
+        /// Gets the current room the player is in.
+        /// </summary>
+        /// <returns>The current room.</returns>
         public Room.Room GetCurrentRoom()
         {
             return rooms[currentRow, currentCol];
         }
 
+        /// <summary>
+        /// Moves the player in the specified direction.
+        /// </summary>
+        /// <param name="direction">The direction to move.</param>
+        /// <param name="player">The player to move.</param>
+        /// <returns>True if the move is successful, false otherwise.</returns>
         public bool MovePlayer(string direction, Player.Player player)
         {
             int newRow = currentRow;
@@ -119,13 +144,14 @@ namespace DungeonExplorer.Managers {
             }
         }
 
-        // Display map using 2D array and current player position (P)
+        /// <summary>
+        /// Displays the map using a 2D array and the current player position.
+        /// </summary>
         public void DisplayMap()
         {
             int rows = levelLayout.GetLength(0);
             int cols = levelLayout.GetLength(1);
 
-            // Print top border
             Console.WriteLine(" "); // Spacing
             Console.WriteLine("+" + new string('-', cols * 2) + "+");
 
@@ -154,7 +180,6 @@ namespace DungeonExplorer.Managers {
                 Console.WriteLine("|"); // Right border
             }
 
-            // Print bottom border
             Console.WriteLine("+" + new string('-', cols * 2) + "+");
             Console.WriteLine(" "); // Spacing
         }
