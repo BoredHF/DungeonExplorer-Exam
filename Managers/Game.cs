@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Security.Cryptography.X509Certificates;
 using System.Text;
@@ -19,8 +20,6 @@ namespace DungeonExplorer.Managers.Game {
         /// </summary>
         public Game()
         {
-            Console.Clear();
-
             // Asks the player for their name, and then sets the player's name
             string playerName = string.Empty;
             while (string.IsNullOrWhiteSpace(playerName))
@@ -34,9 +33,15 @@ namespace DungeonExplorer.Managers.Game {
                 }
             }
 
+            Debug.Assert(!string.IsNullOrWhiteSpace(playerName), "Player name should not be empty.");
+
             Player = new Player.Player(playerName, 100);
             CurrentRoom = new Room.Room($"Starting Room", Room.RoomType.Normal);
             RoomManager = new RoomManager(); // Initialize RoomManager
+
+            Debug.Assert(Player != null, "Player should be initialized.");
+            Debug.Assert(CurrentRoom != null, "CurrentRoom should be initialized.");
+            Debug.Assert(RoomManager != null, "RoomManager should be initialized.");
         }
 
         /// <summary>
@@ -68,6 +73,7 @@ namespace DungeonExplorer.Managers.Game {
         private void DisplayGameStatus()
         {
             Console.WriteLine("===== GAME STATUS =====");
+            Debug.Assert(Player.Health >= 0 && Player.Health <= Player.getMaxHealth(), "Player health should be within valid range.");
             Console.WriteLine($"Player Health: {Player.Health}/{Player.getMaxHealth()}");
             Console.WriteLine();
             Console.WriteLine("Player Inventory:");
@@ -90,7 +96,9 @@ namespace DungeonExplorer.Managers.Game {
             Console.WriteLine("What would you like to do?");
             DisplayPlayerActions();
             Console.Write("> ");
-            return Console.ReadLine();
+            string action = Console.ReadLine();
+            Debug.Assert(!string.IsNullOrWhiteSpace(action), "Player action should not be empty.");
+            return action;
         }
 
         /// <summary>
@@ -128,11 +136,13 @@ namespace DungeonExplorer.Managers.Game {
         /// </summary>
         /// <param name="action">The action input by the player.</param>
         /// <returns>True if the game continues, false if the game ends.</returns>
-        private bool HandlePlayerAction(string action)
+        public bool HandlePlayerAction(string action)
         {
+            Debug.Assert(!string.IsNullOrWhiteSpace(action), "Player action should not be empty.");
+
             if (int.TryParse(action, out int itemId))
             {
-                var item = Player.InventoryContents().FirstOrDefault(i => i.Id == itemId);
+                var item = Player.InventoryContents().FirstOrDefault(i => i.Id == itemId); // Find item in player's inventory
                 if (item != null && item.Useable)
                 {
                     Player.UseItem(item);
@@ -146,7 +156,7 @@ namespace DungeonExplorer.Managers.Game {
             else if (action.StartsWith("pick up", StringComparison.OrdinalIgnoreCase))
             {
                 var itemName = action.Substring("pick up".Length).Trim();
-                var item = CurrentRoom.GetItems().FirstOrDefault(i => i.Name.Equals(itemName, StringComparison.OrdinalIgnoreCase));
+                var item = CurrentRoom.GetItems().FirstOrDefault(i => i.Name.Equals(itemName, StringComparison.OrdinalIgnoreCase)); // Find item in room by name (case-insensitive)
                 if (item != null)
                 {
                     Player.PickUpItem(item);
