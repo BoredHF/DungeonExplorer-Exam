@@ -11,6 +11,8 @@ namespace DungeonExplorer
     {
         static void Main(string[] args)
         {
+            // Single instance of the game, and will most likely be used to create a character creation menu
+
             Game game = new Game();
             game.Start();
         }

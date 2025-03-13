@@ -1,8 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Security.Cryptography.X509Certificates;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 using DungeonExplorer.Item.Items;
 using Microsoft.Win32;
@@ -11,19 +13,49 @@ namespace DungeonExplorer.Managers.Game {
     internal class Game {
         private Player.Player Player { get; set; }
         private Room.Room CurrentRoom { get; set; }
+        private RoomManager RoomManager { get; set; } // Add RoomManager instance
 
+        /// <summary>
+        /// Initializes the game with one room and one player.
+        /// </summary>
         public Game()
         {
-            // Initialize the game with one room and one player
-            Player = new Player.Player("Player", 100);
-            Player.PickUpItem(new HealthPotion());
+            // Asks the player for their name, and then sets the player's name
+            string playerName = string.Empty;
+            while (string.IsNullOrWhiteSpace(playerName))
+            {
+                Console.WriteLine("What would you like to call this character?");
+                Console.Write("> ");
+                playerName = Console.ReadLine();
+                if (string.IsNullOrWhiteSpace(playerName))
+                {
+                    Console.WriteLine("Player name cannot be empty. Please enter a valid name.");
+                }
+            }
 
+            Debug.Assert(!string.IsNullOrWhiteSpace(playerName), "Player name should not be empty.");
+
+            Player = new Player.Player(playerName, 100);
             CurrentRoom = new Room.Room($"Starting Room", Room.RoomType.Normal);
+            RoomManager = new RoomManager(); // Initialize RoomManager
+
+            Debug.Assert(Player != null, "Player should be initialized.");
+            Debug.Assert(CurrentRoom != null, "CurrentRoom should be initialized.");
+            Debug.Assert(RoomManager != null, "RoomManager should be initialized.");
         }
 
+        /// <summary>
+        /// Main game loop.
+        /// </summary>
         public void Start()
         {
-            // Change the playing logic into true and populate the while loop
+            // Display help instructions
+            DisplayHelp();
+
+            // Wait for a few seconds
+            Thread.Sleep(5000); // 5000 milliseconds = 5 seconds
+
+            // Main game loop
             bool playing = true;
             while (playing)
             {
@@ -35,10 +67,13 @@ namespace DungeonExplorer.Managers.Game {
             }
         }
 
+        /// <summary>
+        /// Displays the player's health and inventory.
+        /// </summary>
         private void DisplayGameStatus()
         {
-            // Method to display the player's health and inventory
             Console.WriteLine("===== GAME STATUS =====");
+            Debug.Assert(Player.Health >= 0 && Player.Health <= Player.getMaxHealth(), "Player health should be within valid range.");
             Console.WriteLine($"Player Health: {Player.Health}/{Player.getMaxHealth()}");
             Console.WriteLine();
             Console.WriteLine("Player Inventory:");
@@ -52,18 +87,25 @@ namespace DungeonExplorer.Managers.Game {
             Console.WriteLine();
         }
 
+        /// <summary>
+        /// Gets the player's action choice.
+        /// </summary>
+        /// <returns>Player's action as a string.</returns>
         private string GetPlayerAction()
         {
-            // Method to display the available actions and get the player's choice
             Console.WriteLine("What would you like to do?");
             DisplayPlayerActions();
             Console.Write("> ");
-            return Console.ReadLine();
+            string action = Console.ReadLine();
+            Debug.Assert(!string.IsNullOrWhiteSpace(action), "Player action should not be empty.");
+            return action;
         }
 
+        /// <summary>
+        /// Displays the available actions for the player.
+        /// </summary>
         private void DisplayPlayerActions()
         {
-            // Method to display all the actions the player has
             Console.WriteLine("Available Actions:");
             foreach (var item in Player.InventoryContents())
             {
@@ -72,6 +114,15 @@ namespace DungeonExplorer.Managers.Game {
                     Console.WriteLine($"- Use {item.Name} (ID: {item.Id})");
                 }
             }
+
+            if (CurrentRoom.GetItems() != null)
+            {
+                foreach (var item in CurrentRoom.GetItems())
+                {
+                    Console.WriteLine($"- Pick up {item.Name} (ID: {item.Id})");
+                }
+            }
+
             Console.WriteLine("- Move Up");
             Console.WriteLine("- Move Down");
             Console.WriteLine("- Move Left");
@@ -80,12 +131,18 @@ namespace DungeonExplorer.Managers.Game {
             Console.WriteLine();
         }
 
-        private bool HandlePlayerAction(string action)
+        /// <summary>
+        /// Handles the player's action.
+        /// </summary>
+        /// <param name="action">The action input by the player.</param>
+        /// <returns>True if the game continues, false if the game ends.</returns>
+        public bool HandlePlayerAction(string action)
         {
-            // Method to handle player actions
+            Debug.Assert(!string.IsNullOrWhiteSpace(action), "Player action should not be empty.");
+
             if (int.TryParse(action, out int itemId))
             {
-                var item = Player.InventoryContents().FirstOrDefault(i => i.Id == itemId);
+                var item = Player.InventoryContents().FirstOrDefault(i => i.Id == itemId); // Find item in player's inventory
                 if (item != null && item.Useable)
                 {
                     Player.UseItem(item);
@@ -95,6 +152,23 @@ namespace DungeonExplorer.Managers.Game {
                     Console.WriteLine("Invalid action. Please try again.");
                 }
             }
+            // Handle pick up action
+            else if (action.StartsWith("pick up", StringComparison.OrdinalIgnoreCase))
+            {
+                var itemName = action.Substring("pick up".Length).Trim();
+                var item = CurrentRoom.GetItems().FirstOrDefault(i => i.Name.Equals(itemName, StringComparison.OrdinalIgnoreCase)); // Find item in room by name (case-insensitive)
+                if (item != null)
+                {
+                    Player.PickUpItem(item);
+                    CurrentRoom.GetItems().Remove(item);
+                    Console.WriteLine($"You picked up {item.Name}.");
+                }
+                else
+                {
+                    Console.WriteLine("Item not found in the room.");
+                }
+            }
+            // Handle movement actions
             else if (action.Equals("move up", StringComparison.OrdinalIgnoreCase) ||
                      action.Equals("move down", StringComparison.OrdinalIgnoreCase) ||
                      action.Equals("move left", StringComparison.OrdinalIgnoreCase) ||
@@ -106,6 +180,7 @@ namespace DungeonExplorer.Managers.Game {
                     Console.WriteLine("You can't move in that direction.");
                 }
             }
+            // Handle exit action
             else if (action.Equals("exit", StringComparison.OrdinalIgnoreCase))
             {
                 return false;
@@ -116,5 +191,26 @@ namespace DungeonExplorer.Managers.Game {
             }
             return true;
         }
+        /// <summary>
+        /// Displays the help instructions for the player.
+        /// </summary>
+        private void DisplayHelp()
+        {
+
+            // Not really needed, but my flatmates when testing didn't understand how the commands worked
+            Console.WriteLine("===== HELP =====");
+            Console.WriteLine("Type the command that you want to perform.");
+            Console.WriteLine("For items, use the following commands:");
+            Console.WriteLine("- To pick up an item: pickup {id}");
+            Console.WriteLine("- To use an item: use {id}");
+            Console.WriteLine("Available commands:");
+            Console.WriteLine("- Move Up");
+            Console.WriteLine("- Move Down");
+            Console.WriteLine("- Move Left");
+            Console.WriteLine("- Move Right");
+            Console.WriteLine("- Exit");
+            Console.WriteLine("================");
+        }
+
     }
 }

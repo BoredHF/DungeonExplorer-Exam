@@ -8,10 +8,10 @@ namespace DungeonExplorer.Room
 {
     public enum RoomType
     {
-        Safe,
-        Normal,
-        Boss,
-        Shop,
-        Event
+        Safe, // Safe zone
+        Normal, // Regular room
+        Boss, // Boss room
+        Event, // Items or a key inside the room
+        None // Wall or an empty space
     }
 }
