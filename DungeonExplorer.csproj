@@ -131,6 +131,7 @@
   <ItemGroup>
     <None Include="App.config" />
     <None Include="packages.config" />
+    <None Include="README.md" />
   </ItemGroup>
   <ItemGroup>
     <Analyzer Include="packages\MSTest.Analyzers.3.8.2\analyzers\dotnet\cs\MSTest.Analyzers.CodeFixes.dll" />
