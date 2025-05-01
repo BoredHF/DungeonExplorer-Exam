@@ -1,20 +1,45 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+using System.Diagnostics;
 using DungeonExplorer.Managers.Game;
+using DungeonExplorer.Testing;
 
 namespace DungeonExplorer
 {
-    internal class Program
+    class Program
     {
         static void Main(string[] args)
         {
-            // Single instance of the game, and will most likely be used to create a character creation menu
+            // Run tests if specified
+            if (args.Length > 0 && args[0].ToLower() == "--test")
+            {
+                RunTests();
+                return;
+            }
 
+            // Start the game
             Game game = new Game();
             game.Start();
+        }
+
+        static void RunTests()
+        {
+            Console.WriteLine("Running game tests...");
+            Testing.Testing testing = new Testing.Testing();
+            
+            try
+            {
+                testing.RunAllTests();
+                Console.WriteLine("All tests completed successfully!");
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Test failed: {ex.Message}");
+                Debug.WriteLine($"Test failed: {ex.Message}");
+            }
+            finally
+            {
+                testing.Close();
+            }
         }
     }
 }

@@ -3,91 +3,35 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using DungeonExplorer.Creature;
 using DungeonExplorer.Item.Items;
 using DungeonExplorer.Player;
 using DungeonExplorer.Room;
+using DungeonExplorer.GameMap;
 
 namespace DungeonExplorer.Managers {
     /// <summary>
     /// Manages the rooms in the game.
     /// </summary>
     public class RoomManager {
-        private Room.Room[,] rooms;
-        private bool[,] visitedRooms;
-        private int currentRow;
-        private int currentCol;
-        private string[,] levelLayout;
+        private GameMap.GameMap gameMap;
+
+        /// <summary>
+        /// Gets the current level number.
+        /// </summary>
+        public int CurrentLevel => gameMap.CurrentLevel;
+
+        /// <summary>
+        /// Gets whether the boss of the current level has been defeated.
+        /// </summary>
+        public bool IsBossDefeated => gameMap.IsBossDefeated;
 
         /// <summary>
         /// Initializes a new instance of the RoomManager class.
         /// </summary>
         public RoomManager()
         {
-            InitializeRooms();
-        }
-
-        /// <summary>
-        /// Initializes the rooms for the first level.
-        /// </summary>
-        private void InitializeRooms()
-        {
-            levelLayout = new string[,]
-            {
-                        { "T", "#", "B" },
-                        { "N", "#", "N" },
-                        { "N", "E", "N" }
-            };
-
-            int rows = levelLayout.GetLength(0);
-            int cols = levelLayout.GetLength(1);
-
-            rooms = new Room.Room[rows, cols];
-            visitedRooms = new bool[rows, cols];
-
-            for (int row = 0; row < rows; row++)
-            {
-                for (int col = 0; col < cols; col++)
-                {
-                    string cell = levelLayout[row, col];
-                    RoomType roomType = GetRoomTypeFromChar(cell);
-                    if (roomType != RoomType.None)
-                    {
-                        rooms[row, col] = new Room.Room($"Room ({row},{col})", roomType);
-                        if (roomType == RoomType.Event)
-                        {
-                            rooms[row, col].AddItem(new HealthPotion());
-                        }
-                    }
-                }
-            }
-
-            currentRow = 0;
-            currentCol = 0;
-            visitedRooms[currentRow, currentCol] = true;
-        }
-
-        /// <summary>
-        /// Gets the room type from a character.
-        /// </summary>
-        /// <param name="cell">The character representing the room type.</param>
-        /// <returns>The room type.</returns>
-        private RoomType GetRoomTypeFromChar(string cell)
-        {
-            switch (cell)
-            {
-                case "B":
-                    return RoomType.Boss;
-                case "N":
-                    return RoomType.Normal;
-                case "T":
-                    return RoomType.Safe;
-                case "E":
-                    return RoomType.Event;
-                case "#":
-                    return RoomType.None; // Wall
-                default:
-                    return RoomType.None;
-            }
+            gameMap = new GameMap.GameMap();
         }
 
         /// <summary>
@@ -96,7 +40,7 @@ namespace DungeonExplorer.Managers {
         /// <returns>The current room.</returns>
         public Room.Room GetCurrentRoom()
         {
-            return rooms[currentRow, currentCol];
+            return gameMap.CurrentRoom;
         }
 
         /// <summary>
@@ -104,84 +48,50 @@ namespace DungeonExplorer.Managers {
         /// </summary>
         /// <param name="direction">The direction to move.</param>
         /// <param name="player">The player to move.</param>
-        /// <returns>True if the move is successful, false otherwise.</returns>
-        public bool MovePlayer(string direction, Player.Player player)
+        /// <returns>True if the move was successful, false otherwise.</returns>
+        public bool MovePlayer(string direction, DungeonExplorer.Player.Player player)
         {
-            int newRow = currentRow;
-            int newCol = currentCol;
-
-            switch (direction.ToLower())
-            {
-                case "up":
-                    newRow--;
-                    break;
-                case "down":
-                    newRow++;
-                    break;
-                case "left":
-                    newCol--;
-                    break;
-                case "right":
-                    newCol++;
-                    break;
-                default:
-                    Console.WriteLine("Invalid direction. Use 'up', 'down', 'left', or 'right'.");
-                    return false;
-            }
-
-            if (newRow >= 0 && newRow < rooms.GetLength(0) && newCol >= 0 && newCol < rooms.GetLength(1) && rooms[newRow, newCol] != null)
-            {
-                currentRow = newRow;
-                currentCol = newCol;
-                visitedRooms[currentRow, currentCol] = true;
-                rooms[currentRow, currentCol].EnterRoom(player); // Trigger room behavior
-                return true;
-            }
-            else
-            {
-                Console.WriteLine("You can't move in that direction.");
-                return false;
-            }
+            return gameMap.MovePlayer(direction);
         }
 
         /// <summary>
-        /// Displays the map using a 2D array and the current player position.
+        /// Displays the map.
         /// </summary>
         public void DisplayMap()
         {
-            int rows = levelLayout.GetLength(0);
-            int cols = levelLayout.GetLength(1);
+            gameMap.DisplayMap();
+        }
 
-            Console.WriteLine(" "); // Spacing
-            Console.WriteLine("+" + new string('-', cols * 2) + "+");
+        /// <summary>
+        /// Gets the room at the specified position.
+        /// </summary>
+        /// <param name="row">The row index.</param>
+        /// <param name="col">The column index.</param>
+        /// <returns>The room at the specified position, or null if the position is invalid.</returns>
+        public Room.Room GetRoom(int row, int col)
+        {
+            return gameMap.GetRoom(row, col);
+        }
 
-            for (int row = 0; row < rows; row++)
-            {
-                Console.Write("|"); // Left border
-                for (int col = 0; col < cols; col++)
-                {
-                    if (row == currentRow && col == currentCol)
-                    {
-                        Console.Write("P "); // Player's current position
-                    }
-                    else if (levelLayout[row, col] == "#")
-                    {
-                        Console.Write("# "); // Wall
-                    }
-                    else if (visitedRooms[row, col])
-                    {
-                        Console.Write(levelLayout[row, col] + " ");
-                    }
-                    else
-                    {
-                        Console.Write("? ");
-                    }
-                }
-                Console.WriteLine("|"); // Right border
-            }
+        /// <summary>
+        /// Checks if a room has been visited.
+        /// </summary>
+        /// <param name="row">The row index.</param>
+        /// <param name="col">The column index.</param>
+        /// <returns>True if the room has been visited, false otherwise.</returns>
+        public bool IsRoomVisited(int row, int col)
+        {
+            return gameMap.IsRoomVisited(row, col);
+        }
 
-            Console.WriteLine("+" + new string('-', cols * 2) + "+");
-            Console.WriteLine(" "); // Spacing
+        /// <summary>
+        /// Marks the boss as defeated and advances to the next level if possible.
+        /// </summary>
+        /// <returns>True if the level was advanced, false otherwise.</returns>
+        public bool DefeatBossAndAdvance()
+        {
+            gameMap.DefeatBoss();
+            return gameMap.AdvanceLevel();
         }
     }
 }

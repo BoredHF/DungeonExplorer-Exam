@@ -109,15 +109,24 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Creature\Creature.cs" />
+    <Compile Include="Creature\Monster.cs" />
+    <Compile Include="GameMap\GameMap.cs" />
+    <Compile Include="Interfaces\ICollectible.cs" />
+    <Compile Include="Interfaces\IDamageable.cs" />
     <Compile Include="Item\Item.cs" />
+    <Compile Include="Item\ItemException.cs" />
     <Compile Include="Item\Items\HealthPotion.cs" />
+    <Compile Include="Item\Items\Weapon.cs" />
     <Compile Include="Managers\Game.cs" />
     <Compile Include="Managers\RoomManager.cs" />
     <Compile Include="Player\Player.cs" />
+    <Compile Include="Player\Statistics.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Room\RoomType.cs" />
     <Compile Include="Room\Room.cs" />
+    <Compile Include="Testing\Testing.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />
